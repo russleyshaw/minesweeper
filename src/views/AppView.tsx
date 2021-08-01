@@ -52,6 +52,7 @@ const LeaderboardsSection = styled.div`
 export default observer(() => {
     const [appModel] = useState(() => new AppModel());
     const [isGameOpen, setGameOpen] = useState(false);
+    const [username, setUsername] = useState("");
 
     const leaderboards = appModel.leaderboards.get();
 
@@ -63,7 +64,9 @@ export default observer(() => {
             <TitleHeading>Minesweeper</TitleHeading>
             <OptionsHeading>
                 <button onClick={() => setGameOpen(true)}>Game Options</button>
-                <button onClick={() => appModel.flagAllMines()}>Cheat!</button>
+                <button disabled={appModel.isInitialReveal} onClick={() => appModel.flagAllMines()}>
+                    Cheat!
+                </button>
             </OptionsHeading>
             <Dialog open={isGameOpen} onClose={() => setGameOpen(false)}>
                 <GameOptionsDiv>
@@ -73,7 +76,7 @@ export default observer(() => {
                     <span>Mines</span>
 
                     {DIFFICULTIES.map(diff => (
-                        <React.Fragment>
+                        <React.Fragment key={diff.name}>
                             <button
                                 disabled={appModel.isNewGameOptionsMatched(
                                     diff.width,
@@ -144,6 +147,17 @@ export default observer(() => {
                 <LeaderboardList name="Intermediate" leaders={leaderboards.intermediate} />
                 <LeaderboardList name="Beginner" leaders={leaderboards.beginner} />
             </LeaderboardsSection>
+
+            <Dialog title="Submit to Leaderboards" open={appModel.promptLeaderboard}>
+                <label>Name</label>
+                <input
+                    type="text"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                ></input>
+
+                <button onClick={() => appModel.submitToLeaderboards(username)}>Submit!</button>
+            </Dialog>
         </AppViewDiv>
     );
 });

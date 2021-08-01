@@ -2,7 +2,13 @@ import { action, makeObservable, observable } from "mobx";
 import { Array2DModel } from "./Array2DModel";
 import _, { initial } from "lodash";
 import { TileModel } from "./TileModel";
-import { ADJACENT_OFFSETS } from "../constants";
+import {
+    ADJACENT_OFFSETS,
+    BEGINNER_DIFFICULTY,
+    EXPERT_DIFFICULTY,
+    INTERMEDIATE_DIFFICULTY,
+    isEquivalentDifficulty,
+} from "../constants";
 import { LocalStorageModel } from "./LocalStorageModel";
 
 export interface LeaderboardEntry {
@@ -28,6 +34,8 @@ export class AppModel {
     tiles: Array2DModel<TileModel> = new Array2DModel();
     isInitialReveal: boolean = false;
     isGameOver: boolean = false;
+    isGameWin: boolean = false;
+    promptLeaderboard: boolean = false;
 
     leaderboards: LocalStorageModel<Leaderboards>;
 
@@ -68,6 +76,10 @@ export class AppModel {
             tiles: observable,
             flagsRemaining: observable,
             secondsElapsed: observable,
+            promptLeaderboard: observable,
+            isGameOver: observable,
+            isGameWin: observable,
+            isInitialReveal: observable,
 
             newGame: action,
             tickSecond: action,
@@ -76,6 +88,7 @@ export class AppModel {
             revealTile: action,
             toggleFlagTile: action,
             setNewGameOptions: action,
+            flagAllMines: action,
         });
 
         this.newGame();
@@ -166,7 +179,7 @@ export class AppModel {
         this.flagsRemaining = 0;
     }
 
-    isGameWin() {
+    checkGameWin() {
         // Every non-mine should be revealed
         for (const tile of this.tiles.data) {
             if (!tile.mine && !tile.revealed) {
@@ -228,11 +241,62 @@ export class AppModel {
             }
         }
 
-        if (this.isGameWin()) {
+        if (this.checkGameWin() && !this.isGameOver) {
             // Game WIN
             console.log("GAME WIN!");
+            this.isGameWin = true;
+            this.promptLeaderboard = true;
             window.setTimeout(() => window.alert("Game Win!"), 0);
             window.clearInterval(this.secondsTickInterval);
         }
+    }
+
+    submitToLeaderboards(name: string) {
+        if (!this.promptLeaderboard) return;
+        this.promptLeaderboard = false;
+
+        const leaderboard = this.leaderboards.get();
+        if (
+            isEquivalentDifficulty(
+                this.tiles.width,
+                this.tiles.height,
+                this.minesTotal,
+                EXPERT_DIFFICULTY
+            )
+        ) {
+            leaderboard.expert.push({
+                name,
+                elapsed: this.secondsElapsed,
+            });
+        }
+        if (
+            isEquivalentDifficulty(
+                this.tiles.width,
+                this.tiles.height,
+                this.minesTotal,
+                INTERMEDIATE_DIFFICULTY
+            )
+        ) {
+            leaderboard.intermediate.push({
+                name,
+                elapsed: this.secondsElapsed,
+            });
+        }
+
+        if (
+            isEquivalentDifficulty(
+                this.tiles.width,
+                this.tiles.height,
+                this.minesTotal,
+                BEGINNER_DIFFICULTY
+            )
+        ) {
+            leaderboard.beginner.push({
+                name,
+                elapsed: this.secondsElapsed,
+            });
+        }
+
+        this.leaderboards.set(leaderboard);
     }
 }

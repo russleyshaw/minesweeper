@@ -15,15 +15,33 @@ export const COLORS = {
     danger: "#FF2323",
 };
 
-interface Difficulty {
+export interface Difficulty {
     name: string;
     width: number;
     height: number;
     mines: number;
 }
 
+export const BEGINNER_DIFFICULTY: Difficulty = { name: "Beginner", width: 9, height: 9, mines: 10 };
+export const INTERMEDIATE_DIFFICULTY: Difficulty = {
+    name: "Intermediate",
+    width: 16,
+    height: 16,
+    mines: 40,
+};
+export const EXPERT_DIFFICULTY: Difficulty = { name: "Expert", width: 30, height: 16, mines: 99 };
+
 export const DIFFICULTIES: Difficulty[] = [
-    { name: "Beginner", width: 9, height: 9, mines: 10 },
-    { name: "Intermediate", width: 16, height: 16, mines: 40 },
-    { name: "Expert", width: 30, height: 16, mines: 99 },
+    BEGINNER_DIFFICULTY,
+    INTERMEDIATE_DIFFICULTY,
+    EXPERT_DIFFICULTY,
 ];
+
+export function isEquivalentDifficulty(
+    width: number,
+    height: number,
+    mines: number,
+    diff: Difficulty
+): boolean {
+    return width === diff.width && height === diff.height && mines === diff.mines;
+}

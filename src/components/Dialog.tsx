@@ -52,9 +52,13 @@ export default function Dialog(props: DialogProps): JSX.Element | null {
                 <ModalDiv>
                     <Heading>
                         <div>{props.title}</div>
-                        <button onClick={() => props.onClose?.()}>
-                            <FontAwesomeIcon icon={faTimes} />
-                        </button>
+                        {props.onClose == null ? (
+                            <span></span>
+                        ) : (
+                            <button onClick={() => props.onClose?.()}>
+                                <FontAwesomeIcon icon={faTimes} />
+                            </button>
+                        )}
                     </Heading>
                     {props.children}
                 </ModalDiv>

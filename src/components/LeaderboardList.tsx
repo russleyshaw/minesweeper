@@ -33,7 +33,7 @@ export default observer((props: LeaderboardListProps) => {
             <h3>{props.name}</h3>
             <EntriesDiv>
                 {sortedLeaders.map(l => (
-                    <React.Fragment>
+                    <React.Fragment key={l.name + l.elapsed}>
                         <span>{l.name}</span>
                         <span>{l.elapsed} sec</span>
                     </React.Fragment>
