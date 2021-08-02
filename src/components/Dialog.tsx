@@ -32,6 +32,9 @@ const ModalDiv = styled.div`
     padding: 8px;
     border-radius: 4px;
     width: 400px;
+
+    border: ${COLORS.accent} 1px solid;
+    box-shadow: 4px 4px 6px 0px rgba(0, 0, 0, 0.5);
 `;
 
 const Heading = styled.div`

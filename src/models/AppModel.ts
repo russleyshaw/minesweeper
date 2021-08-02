@@ -5,6 +5,7 @@ import { TileModel } from "./TileModel";
 import {
     ADJACENT_OFFSETS,
     BEGINNER_DIFFICULTY,
+    DIFFICULTIES,
     EXPERT_DIFFICULTY,
     INTERMEDIATE_DIFFICULTY,
     isEquivalentDifficulty,
@@ -35,7 +36,9 @@ export class AppModel {
     isInitialReveal: boolean = false;
     isGameOver: boolean = false;
     isGameWin: boolean = false;
-    promptLeaderboard: boolean = false;
+
+    isGameWinDialogOpen: boolean = false;
+    isGameOverDialogOpen: boolean = false;
 
     leaderboards: LocalStorageModel<Leaderboards>;
 
@@ -76,10 +79,11 @@ export class AppModel {
             tiles: observable,
             flagsRemaining: observable,
             secondsElapsed: observable,
-            promptLeaderboard: observable,
+            isGameWinDialogOpen: observable,
             isGameOver: observable,
             isGameWin: observable,
             isInitialReveal: observable,
+            isGameOverDialogOpen: observable,
 
             newGame: action,
             tickSecond: action,
@@ -204,9 +208,14 @@ export class AppModel {
         if (tile.mine) {
             // Gameover
             this.isGameOver = true;
-            console.log("GAME OVER!");
-            window.setTimeout(() => window.alert("Game Over!"), 0);
+            this.tiles.forEach((x, y, t) => {
+                if (t.mine) {
+                    t.revealed = true;
+                }
+            });
+            this.isGameOverDialogOpen = true;
             window.clearInterval(this.secondsTickInterval);
+            return;
         }
 
         const open: Array<[number, number, TileModel]> = [[x, y, tile]];
@@ -242,18 +251,24 @@ export class AppModel {
         }
 
         if (this.checkGameWin() && !this.isGameOver) {
-            // Game WIN
-            console.log("GAME WIN!");
             this.isGameWin = true;
-            this.promptLeaderboard = true;
-            window.setTimeout(() => window.alert("Game Win!"), 0);
+            this.isGameWinDialogOpen = true;
             window.clearInterval(this.secondsTickInterval);
         }
     }
 
+    shouldSubmitToLeaderboards(): boolean {
+        const leaderboard = this.leaderboards.get();
+
+        // Prompt submission if it matches a difficulty category
+        return DIFFICULTIES.some(d =>
+            isEquivalentDifficulty(this.tiles.width, this.tiles.height, this.minesTotal, d)
+        );
+    }
+
     submitToLeaderboards(name: string) {
-        if (!this.promptLeaderboard) return;
-        this.promptLeaderboard = false;
+        if (!this.isGameWinDialogOpen) return;
+        this.isGameWinDialogOpen = false;
 
         const leaderboard = this.leaderboards.get();
         if (

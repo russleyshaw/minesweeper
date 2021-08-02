@@ -9,6 +9,7 @@ import { COLORS } from "../constants";
 
 export interface TileButtonProps {
     model: TileModel;
+    disabled?: boolean;
 
     onReveal?(): void;
     onFlag?(): void;
@@ -40,6 +41,7 @@ export default observer((props: TileButtonProps) => {
             revealed={model.revealed}
             mine={model.mine}
             flag={model.flag}
+            disabled={props.disabled}
             onClick={onClick}
             onContextMenu={onRightClick}
         >

@@ -27,13 +27,17 @@ const TitleHeading = styled.h1`
 
 const OptionsHeading = styled.div`
     margin-bottom: 16px;
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    grid-gap: 8px 8px;
 `;
 
 const InfoHeading = styled.div`
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
     margin-bottom: 8px;
+
+    justify-items: center;
 `;
 
 const GameOptionsDiv = styled.div`
@@ -49,6 +53,12 @@ const LeaderboardsSection = styled.div`
     justify-content: space-between;
 `;
 
+const LeaderboardSubmitSection = styled.div`
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 8px 8px;
+`;
+
 export default observer(() => {
     const [appModel] = useState(() => new AppModel());
     const [isGameOpen, setGameOpen] = useState(false);
@@ -59,16 +69,22 @@ export default observer(() => {
     const gridTemplateRows = `repeat(${appModel.tiles.height}, 32px)`;
     const gridTemplateColumns = `repeat(${appModel.tiles.width}, 32px)`;
 
+    const isGameStopped = appModel.isGameOver || appModel.isGameWin;
+    const shouldSubmit = appModel.shouldSubmitToLeaderboards();
+
     return (
         <AppViewDiv>
             <TitleHeading>Minesweeper</TitleHeading>
             <OptionsHeading>
                 <button onClick={() => setGameOpen(true)}>Game Options</button>
-                <button disabled={appModel.isInitialReveal} onClick={() => appModel.flagAllMines()}>
+                <button
+                    disabled={appModel.isInitialReveal || isGameStopped}
+                    onClick={() => appModel.flagAllMines()}
+                >
                     Cheat!
                 </button>
             </OptionsHeading>
-            <Dialog open={isGameOpen} onClose={() => setGameOpen(false)}>
+            <Dialog title="Game Options" open={isGameOpen} onClose={() => setGameOpen(false)}>
                 <GameOptionsDiv>
                     <span></span>
                     <span>Height</span>
@@ -126,14 +142,15 @@ export default observer(() => {
             </Dialog>
 
             <InfoHeading>
-                <span>Flags: {appModel.flagsRemaining}</span>
+                <span style={{ justifySelf: "start" }}>Flags: {appModel.flagsRemaining}</span>
                 <button onClick={() => appModel.newGame()}>Reset</button>
-                <span>Elapsed: {appModel.secondsElapsed}</span>
+                <span style={{ justifySelf: "end" }}>Elapsed: {appModel.secondsElapsed}</span>
             </InfoHeading>
 
             <TilesGrid style={{ gridTemplateColumns, gridTemplateRows }}>
                 {appModel.tiles.map((x, y, t) => (
                     <TileButton
+                        disabled={isGameStopped}
                         key={`${x}_${y}`}
                         onReveal={() => appModel.revealTile(x, y)}
                         onFlag={() => appModel.toggleFlagTile(t)}
@@ -148,15 +165,40 @@ export default observer(() => {
                 <LeaderboardList name="Beginner" leaders={leaderboards.beginner} />
             </LeaderboardsSection>
 
-            <Dialog title="Submit to Leaderboards" open={appModel.promptLeaderboard}>
-                <label>Name</label>
-                <input
-                    type="text"
-                    value={username}
-                    onChange={e => setUsername(e.target.value)}
-                ></input>
+            <Dialog
+                title={shouldSubmit ? "You Won! - Submit to Leaderboards" : "You Won!"}
+                open={appModel.isGameWinDialogOpen}
+            >
+                {shouldSubmit ? (
+                    <LeaderboardSubmitSection>
+                        <label>My Name</label>
+                        <input
+                            type="text"
+                            value={username}
+                            onChange={e => setUsername(e.target.value)}
+                        ></input>
 
-                <button onClick={() => appModel.submitToLeaderboards(username)}>Submit!</button>
+                        <button onClick={() => appModel.submitToLeaderboards(username)}>
+                            Submit!
+                        </button>
+                    </LeaderboardSubmitSection>
+                ) : (
+                    <button
+                        onClick={() => {
+                            appModel.isGameWinDialogOpen = false;
+                        }}
+                    >
+                        Okay
+                    </button>
+                )}
+            </Dialog>
+
+            <Dialog
+                title="Game Over"
+                open={appModel.isGameOverDialogOpen}
+                onClose={() => (appModel.isGameOverDialogOpen = false)}
+            >
+                You hit a mine!
             </Dialog>
         </AppViewDiv>
     );
